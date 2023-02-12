@@ -1,33 +1,16 @@
-import sqlite3
+import requests
 
-conn = sqlite3.connect('dbase.sqlite')
-cur = conn.cursor()
+def get_price(symbol):
+    url = f"https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}&convert=USD"
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_Pro_API_Key': '9bb7d0ec-030e-42f0-804f-8778b7507e0b'
+    }
 
-# Make some fresh tables using executescript()
-cur.executescript('''
+    response = requests.get(url, headers=headers).json()
+    price = response['data'][symbol]['quote']['USD']['price']
+    return price
 
-
-CREATE  TABLE IF NOT EXISTS  User (
-    id  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    name    TEXT UNIQUE,
-    password TEXT
-);
-''')
-
-def new_user(nick,pasw):   
-    cur.execute('SELECT * FROM User WHERE name = ?', (nick,))
-    result = cur.fetchone()
-    if result:
-        print(f'Error: username "{nick}" is already taken.')
-        return False
-    else:
-        cur.execute('INSERT INTO User (name, password) VALUES (?, ?)', (nick, pasw))
-        conn.commit()
-        print(f'Success: username "{nick}" has been created.')
-        return True
-
-
-        
-nick='stojko'
-pasw='ivandovic'
-new_user(nick,pasw)
+symbol = input("Enter the symbol of the cryptocurrency: ")
+price = get_price(symbol.upper())
+print(f"The price of {symbol} is ${price:.2f}")
