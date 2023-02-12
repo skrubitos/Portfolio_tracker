@@ -82,10 +82,13 @@ cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
 #it adds token with parametars symbol and amount and to select function add token we first need to pas log in function to get user id
 #which we need in order to select which tokens we are choosing
 def add_token(symbol, amount):
+    if not amount.isdigit():
+        print("Error: amount must be a integer.")
+        return 
     cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
     result = cur.fetchone()
     if result:
-        new_amount = result[0] + amount
+        new_amount = result[0] + float (amount)
         cur.execute('UPDATE Token SET amount = ? WHERE user_id = ? AND symbol = ?', (new_amount, logged_in_user_id, symbol))
         conn.commit()
         print(f'Success: token "{symbol}" has been updated in the portfolio. Total amount is {new_amount}.')
@@ -117,11 +120,21 @@ def get_price(symbol):
     }
 
     response = requests.get(url, headers=headers).json()
-    price = response['data'][symbol]['quote']['USD']['price']
-    return price
+    try:
+        price = response['data'][symbol]['quote']['USD']['price']
+        return price
+    except KeyError:
+        return False
+    
 
-symbol = input("Enter the symbol of the cryptocurrency: ")
-price = get_price(symbol.upper())
-print(f"The price of {symbol} is ${price:.2f}")
+"""
+login("skrubitos","admin")
+
+while True:
+    symbol= input("simbol: ").upper()
+    amount=input("amount: ")
+    
+    add_token(symbol,amount)
+"""    
 
 
