@@ -69,7 +69,11 @@ def new_user(nick,pasw):
         print(f'Success: username "{nick}" has been created.')
         return True
 
-
+def show_user():
+    cur.execute("SELECT name FROM User")
+    result= cur.fetchall()
+    for j in range(len(result)):
+        print(f"User {j+1}: {result[j][0]}")
 
 cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,

@@ -2,7 +2,7 @@
 import sqlite3
 import requests
 
-conn = sqlite3.connect('dbase.sqlite')
+conn = sqlite3.connect('test.sqlite')
 cur = conn.cursor()
 logged_in_user_id= None
 
@@ -68,7 +68,11 @@ def new_user(nick,pasw):
         # Return True indicating that the user was successfully created
         print(f'Success: username "{nick}" has been created.')
         return True
-
+def show_user():
+    cur.execute("SELECT name FROM User")
+    result= cur.fetchall()
+    for j in range(len(result)):
+        print(f"User {j+1}: {result[j][0]}")
 
 
 cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
@@ -127,14 +131,13 @@ def get_price(symbol):
         return False
     
 
+'''
+new_user("skrubitos","admin")
+new_user("admin1","sifra1")
 
-login("skrubitos","admin")
-
-while True:
-    symbol= input("simbol: ").upper()
-    amount=input("amount: ")
-    
-    add_token(symbol,amount)
-    
+new_user("admin2","sifra2")
+new_user("admin3","sifra3")
+'''
 
 
+show_user()
