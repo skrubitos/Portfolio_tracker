@@ -18,6 +18,24 @@ CREATE  TABLE IF NOT EXISTS  User (
     name    TEXT UNIQUE,
     password TEXT
 );
+
+CREATE TABLE IF NOT EXISTS Token (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    user_id INTEGER NOT NULL,
+    symbol TEXT NOT NULL,
+    amount REAL NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES User (id)
+);
+CREATE  TABLE IF NOT EXISTS  past_value (
+    user_id INTEGER NOT NULL,
+    token  TEXT,
+    price REAL NOT NULL,
+    amount REAL NOT NULL,
+    holdings$ REAL NOT NULL,
+    date DATETIME,
+    FOREIGN KEY (user_id) REFERENCES User (id)
+)
+
 ''')
 
 
@@ -103,23 +121,13 @@ def show_user():
         print("No users yet")
     
     for j in range(len(result)):
-        print(f"User {j+1}: {result[j][0]} (registrated on :{result[j][1]}) ")
+        print(f"User {j+1}: {result[j][0]} (Registered: {result[j][1]}) ")
         
 
 
-cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    user_id INTEGER NOT NULL,
-    symbol TEXT NOT NULL,
-    amount REAL NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User (id)
-);
-''')
-#it adds token with parametars symbol and amount and to select function add token we first need to pas log in function to get user id
-#which we need in order to select which tokens we are choosing
 def add_token(symbol, amount=0):
     try:
-        if not isinstance(amount, float):
+        if not isinstance(amount, float) and not isinstance(amount, int):
             print("Amount must be a float.")
             return 
         cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
@@ -144,18 +152,26 @@ def show_tokens():
         return
     cur.execute('SELECT symbol, amount FROM Token WHERE user_id = ?', (logged_in_user_id,))
     tokens = cur.fetchall()
+    
     if tokens:
         total_worth= 0
         print('\t Here are your tokens')
         for token in tokens:
             price=get_price(token[0])
-            total_worth+= float(price)
+            price = round(price, 2)
+            holdingsS= price* float(token[1])
+            total_worth+= float(holdingsS)
             print(f'{token[0]}: {token[1]} \t Price in $: {get_price(token[0]):,.2f}$')
+            cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,token[1], token[0],  price ,holdingsS, current_time_string))
+
+            conn.commit()
 
            
         print(f"Your portfolio is worth: {total_worth:,.2f}$")
     else:
         print('You have no tokens in your portfolio.')
+
+
 
 def get_price(symbol):
     url = f"https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}&convert=USD"
@@ -172,6 +188,4 @@ def get_price(symbol):
         return False
     
 
-
-login("skrubitos","admin")
-show_tokens()
+show_user()
