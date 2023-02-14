@@ -1,3 +1,8 @@
+import datetime
+
+current_time = datetime.datetime.now()
+current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
 # Importing the sqlite3 module and connecting to the database:
 import sqlite3
 import requests
@@ -52,6 +57,9 @@ def login(nick, pasw):
 
 def delete_user(nick, pasw):
     user_id = login(nick, pasw)
+    global logged_in_user_id
+    logged_in_user_id = None
+
     if user_id:
         cur.execute('DELETE FROM User WHERE name = ?', (nick,))
         conn.commit()
@@ -81,20 +89,21 @@ def new_user(nick, pasw):
         if not salt_column_exists:
             # If the salt column does not exist, add it to the User table
             cur.execute('ALTER TABLE User ADD COLUMN salt TEXT')
+            cur.execute('ALTER TABLE User ADD COLUMN timestamp DATETIME')
         # Insert a new user into the User table with the given username and hashed password
-        cur.execute('INSERT INTO User (name, password, salt) VALUES (?, ?, ?)', (nick, hashed_password, salt))
+        cur.execute('INSERT INTO User (name, password, salt,timestamp) VALUES (?, ?, ?,?)', (nick, hashed_password, salt,current_time_string))
         conn.commit()
         print(f'Success: username "{nick}" has been created.')
         return True
 
 def show_user():
-    cur.execute("SELECT name FROM User")
+    cur.execute("SELECT name, timestamp FROM user")
     result= cur.fetchall()
     if len(result)<1:
         print("No users yet")
     
     for j in range(len(result)):
-        print(f"User {j+1}: {result[j][0]}")
+        print(f"User {j+1}: {result[j][0]} (registrated on :{result[j][1]}) ")
         
 
 
@@ -109,20 +118,23 @@ cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
 #it adds token with parametars symbol and amount and to select function add token we first need to pas log in function to get user id
 #which we need in order to select which tokens we are choosing
 def add_token(symbol, amount=0):
-    if not str(amount).isdigit():
-        print("Error: amount must be a integer.")
-        return 
-    cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
-    result = cur.fetchone()
-    if result:
-        new_amount = result[0] + float (amount)
-        cur.execute('UPDATE Token SET amount = ? WHERE user_id = ? AND symbol = ?', (new_amount, logged_in_user_id, symbol))
-        conn.commit()
-        print(f'Success: token "{symbol}" has been updated in the portfolio. Total amount is {new_amount}.')
-    else:
-        cur.execute('INSERT INTO Token (user_id, symbol, amount) VALUES (?, ?,?)', (logged_in_user_id, symbol, amount))
-        conn.commit()
-        print(f'Success: token "{symbol}" has been added to the portfolio.')
+    try:
+        if not isinstance(amount, float):
+            print("Amount must be a float.")
+            return 
+        cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
+        result = cur.fetchone()
+        if result:
+            new_amount = result[0] + float (amount)
+            cur.execute('UPDATE Token SET amount = ? WHERE user_id = ? AND symbol = ?', (new_amount, logged_in_user_id, symbol))
+            conn.commit()
+            print(f'Success: token "{symbol}" has been updated in the portfolio. Total amount is {new_amount}.')
+        else:
+            cur.execute('INSERT INTO Token (user_id, symbol, amount) VALUES (?, ?,?)', (logged_in_user_id, symbol, amount))
+            conn.commit()
+            print(f'Success: token "{symbol}" has been added to the portfolio.')
+    except SyntaxError:
+        print("Something went wrong. Make sure that you use integer or float number ex. (1.2)")
 
 
 #if user id is in variable logged_in_user_id then it will show list of tokens
@@ -133,9 +145,15 @@ def show_tokens():
     cur.execute('SELECT symbol, amount FROM Token WHERE user_id = ?', (logged_in_user_id,))
     tokens = cur.fetchall()
     if tokens:
-        print('Here are your tokens:')
+        total_worth= 0
+        print('\t Here are your tokens')
         for token in tokens:
-            print(f'- {token[0]}: {token[1]}')
+            price=get_price(token[0])
+            total_worth+= float(price)
+            print(f'{token[0]}: {token[1]} \t Price in $: {get_price(token[0]):,.2f}$')
+
+           
+        print(f"Your portfolio is worth: {total_worth:,.2f}$")
     else:
         print('You have no tokens in your portfolio.')
 
@@ -156,5 +174,4 @@ def get_price(symbol):
 
 
 login("skrubitos","admin")
-add_token("BTC",2)
 show_tokens()
