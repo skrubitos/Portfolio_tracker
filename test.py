@@ -1,8 +1,13 @@
+import datetime
+
+current_time = datetime.datetime.now()
+current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
 # Importing the sqlite3 module and connecting to the database:
 import sqlite3
 import requests
 
-conn = sqlite3.connect('test.sqlite')
+conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
 logged_in_user_id= None
 
@@ -35,7 +40,7 @@ def login(nick, pasw):
         input_hashed_password = bcrypt.hashpw(pasw.encode('utf-8'), stored_salt)
         if input_hashed_password == stored_hashed_password:
             logged_in_user_id = result[0]
-            print(f'Success: username "{nick}" has been logged in.')
+            print(f'Success: "{nick}" has been logged in.')
             # Return True indicating that the login was successful
             return True
     print('Name or password wrong')
@@ -52,6 +57,7 @@ def login(nick, pasw):
 
 def delete_user(nick, pasw):
     user_id = login(nick, pasw)
+    global logged_in_user_id= None
     if user_id:
         cur.execute('DELETE FROM User WHERE name = ?', (nick,))
         conn.commit()
@@ -81,20 +87,21 @@ def new_user(nick, pasw):
         if not salt_column_exists:
             # If the salt column does not exist, add it to the User table
             cur.execute('ALTER TABLE User ADD COLUMN salt TEXT')
+            cur.execute('ALTER TABLE User ADD COLUMN timestamp DATETIME')
         # Insert a new user into the User table with the given username and hashed password
-        cur.execute('INSERT INTO User (name, password, salt) VALUES (?, ?, ?)', (nick, hashed_password, salt))
+        cur.execute('INSERT INTO User (name, password, salt,timestamp) VALUES (?, ?, ?,?)', (nick, hashed_password, salt,current_time_string))
         conn.commit()
         print(f'Success: username "{nick}" has been created.')
         return True
 
 def show_user():
-    cur.execute("SELECT name FROM User")
+    cur.execute("SELECT name, timestamp FROM user")
     result= cur.fetchall()
     if len(result)<1:
         print("No users yet")
     
     for j in range(len(result)):
-        print(f"User {j+1}: {result[j][0]}")
+        print(f"User {j+1}: {result[j][0]} (registrated on :{result[j][1]}) ")
         
 
 
@@ -108,8 +115,8 @@ cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
 ''')
 #it adds token with parametars symbol and amount and to select function add token we first need to pas log in function to get user id
 #which we need in order to select which tokens we are choosing
-def add_token(symbol, amount):
-    if not amount.isdigit():
+def add_token(symbol, amount=0):
+    if not str(amount).isdigit():
         print("Error: amount must be a integer.")
         return 
     cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
@@ -155,3 +162,5 @@ def get_price(symbol):
     
 
 
+login("skrubitos","admin")
+show_user()
