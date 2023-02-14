@@ -25,14 +25,23 @@ CREATE  TABLE IF NOT EXISTS  User (
 
 def login(nick, pasw):
     global logged_in_user_id
-    cur.execute('SELECT * FROM User WHERE name = ? AND password = ?', (nick, pasw))
+    cur.execute('SELECT * FROM User WHERE name = ?', (nick,))
     result = cur.fetchone()
     if result:
-        logged_in_user_id = result[0]
-        return True
-    else:
-        print('Name or password wrong')
-        return False
+        # Retrieve the stored hashed password and salt for the given username
+        stored_hashed_password = result[2]
+        stored_salt = result[3]
+        # Hash the input password using the same salt and compare with the stored hashed password
+        input_hashed_password = bcrypt.hashpw(pasw.encode('utf-8'), stored_salt)
+        if input_hashed_password == stored_hashed_password:
+            logged_in_user_id = result[0]
+            print(f'Success: username "{nick}" has been logged in.')
+            # Return True indicating that the login was successful
+            return True
+    print('Name or password wrong')
+    # Return False indicating that the login was not successful
+    return False
+
 
 
 # DEFINING DELITE USER 
@@ -52,8 +61,9 @@ def delete_user(nick, pasw):
         print('Error: invalid password. User deletion failed.')
         return False
 
+import bcrypt
 
-def new_user(nick,pasw):   
+def new_user(nick, pasw):
     # Check if the given username already exists in the User table
     cur.execute('SELECT * FROM User WHERE name = ?', (nick,))
     result = cur.fetchone()
@@ -62,17 +72,30 @@ def new_user(nick,pasw):
         # Return False indicating that the user could not be created due to duplicate username
         return False
     else:
-        # If the username is available, insert a new user into the User table with the given username and password
-        cur.execute('INSERT INTO User (name, password) VALUES (?, ?)', (nick, pasw))
+        # If the username is available, generate a salt and hash the password using bcrypt
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(pasw.encode('utf-8'), salt)
+        # Check if the salt column exists in the User table
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='User' AND sql LIKE '%salt%'")
+        salt_column_exists = bool(cur.fetchone())
+        if not salt_column_exists:
+            # If the salt column does not exist, add it to the User table
+            cur.execute('ALTER TABLE User ADD COLUMN salt TEXT')
+        # Insert a new user into the User table with the given username and hashed password
+        cur.execute('INSERT INTO User (name, password, salt) VALUES (?, ?, ?)', (nick, hashed_password, salt))
         conn.commit()
-        # Return True indicating that the user was successfully created
         print(f'Success: username "{nick}" has been created.')
         return True
+
 def show_user():
     cur.execute("SELECT name FROM User")
     result= cur.fetchall()
+    if len(result)<1:
+        print("No users yet")
+    
     for j in range(len(result)):
         print(f"User {j+1}: {result[j][0]}")
+        
 
 
 cur.executescript('''CREATE TABLE IF NOT EXISTS Token (
@@ -131,13 +154,4 @@ def get_price(symbol):
         return False
     
 
-'''
-new_user("skrubitos","admin")
-new_user("admin1","sifra1")
 
-new_user("admin2","sifra2")
-new_user("admin3","sifra3")
-'''
-
-
-show_user()
