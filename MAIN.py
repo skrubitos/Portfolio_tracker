@@ -188,4 +188,3 @@ def get_price(symbol):
         return False
     
 
-show_user()
