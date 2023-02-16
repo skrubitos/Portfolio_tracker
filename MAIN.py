@@ -246,19 +246,9 @@ login_button.grid(row=0, column=2, padx=10, pady=10)
 register_button = tk.Button(input_frame, text="Register", command=lambda: new_user(username_entry.get(), password_entry.get()))
 register_button.grid(row=2, column=1, padx=10, pady=10)
 
-
-
-
-
+# Create a button to show the users
 show_users_button = tk.Button(input_frame, text="Show Users", command=show_user)
 show_users_button.grid(row=2, column=2, padx=10, pady=10)
-
-
-
-# Initialize a flag variable to keep track of the user list state
-
-
-
 
 # Create a frame for the buttons
 button_frame = tk.Frame(root)
