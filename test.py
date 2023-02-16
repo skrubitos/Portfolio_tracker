@@ -95,12 +95,24 @@ def new_user(nick, pasw):
     # Check if the given username already exists in the User table
     cur.execute('SELECT * FROM User WHERE name = ?', (nick,))
     result = cur.fetchone()
+    if len(pasw)<5 and len(nick)<3:
+                messagebox.showwarning("No data", f'Password must have min. 5 characters, and username must have atleast 3 characters.')
+                result=False
+
+    elif len(pasw)<5 :
+        result= False
+        messagebox.showwarning("Password too short", f'Please choose a stronger password (min 5 characters).')
+    elif len(nick)<3:
+        result= False
+        messagebox.showwarning("Username too short", f'Username must have atleast 3 characters.')
+        
+
     if result:
         print(f'Error: username "{nick}" is already taken.')
-        messagebox.showwarning(f'Error: username "{nick}" is already taken.')
+        messagebox.showwarning("Name already taken", f'Error:{nick} is already taken. Please choose a different username.')
         # Return False indicating that the user could not be created due to duplicate username
         return False
-    else:
+    if result is None:
         # If the username is available, generate a salt and hash the password using bcrypt
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(pasw.encode('utf-8'), salt)
@@ -117,7 +129,6 @@ def new_user(nick, pasw):
         print(f'Success: username "{nick}" has been created.')
         messagebox.showinfo("Registration Successful", "User registered successfully!")
         return True
-
 
 
 
@@ -232,26 +243,10 @@ login_button = tk.Button(input_frame, text="Login")
 login_button.grid(row=0, column=2, padx=10, pady=10)
 
 # Create a button to register the user
-register_button = tk.Button(input_frame, text="Register", command=new_user)
+register_button = tk.Button(input_frame, text="Register", command=lambda: new_user(username_entry.get(), password_entry.get()))
 register_button.grid(row=2, column=1, padx=10, pady=10)
 
-user_list_displayed = False
-'''
-# Create a button to show a list of users
-show_users_button = tk.Button(input_frame, text="Show Users",command=show_user)
-show_users_button.grid(row=2, column=2, padx=10, pady=10)
-'''
-user_window=None
-def toggle_user_list():
-    global user_list_displayed, user_window
-    if user_list_displayed:
-        # If the user list is currently displayed, close the window and update the flag
-        user_window.destroy()
-        user_list_displayed = False
-    else:
-        # If the user list is not displayed, show it in a new window and update the flag
-        show_user()
-        user_list_displayed = True
+
 
 
 
