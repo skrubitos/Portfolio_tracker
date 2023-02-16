@@ -12,6 +12,7 @@ current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
 conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
 logged_in_user_id= None
+logged_in_user_api=
 
 # Create the User table
 cur.executescript('''
@@ -62,8 +63,11 @@ def login(nick, pasw):
             logged_in_user_id = result[0]
             print(f'Success: "{nick}" has been logged in.')
             # Return True indicating that the login was successful
+            messagebox.showinfo(title="Succesfull Login", message=f"Welcome {nick}")
+
             return True
     print('Name or password wrong')
+    messagebox.showwarning("Error", f'Wrong username or password')
     # Return False indicating that the login was not successful
     return False
 
@@ -211,12 +215,17 @@ def get_price(symbol):
     except KeyError:
         return False
     
+import tkinter as tk
+
+
 
 
 # Create a new Tkinter window
 root = tk.Tk()
 root.geometry("500x700")
 root.title("User Login System")
+icon = tk.PhotoImage(file="main_icon.png")
+root.iconphoto(False, icon)
 
 # Create a frame for the input fields and buttons
 input_frame = tk.Frame(root)
@@ -239,7 +248,7 @@ password_entry = tk.Entry(input_frame, show="*")
 password_entry.grid(row=1, column=1, padx=10, pady=10)
 
 # Create a button to submit the login information
-login_button = tk.Button(input_frame, text="Login")
+login_button = tk.Button(input_frame, text="Login", command=lambda: login(username_entry.get(), password_entry.get()))
 login_button.grid(row=0, column=2, padx=10, pady=10)
 
 # Create a button to register the user
