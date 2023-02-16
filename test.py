@@ -228,36 +228,40 @@ password_entry = tk.Entry(input_frame, show="*")
 password_entry.grid(row=1, column=1, padx=10, pady=10)
 
 # Create a button to submit the login information
-submit_button = tk.Button(input_frame, text="Submit")
-submit_button.grid(row=0, column=2, padx=10, pady=10)
+login_button = tk.Button(input_frame, text="Login")
+login_button.grid(row=0, column=2, padx=10, pady=10)
 
 # Create a button to register the user
 register_button = tk.Button(input_frame, text="Register", command=new_user)
 register_button.grid(row=2, column=1, padx=10, pady=10)
 
-
+user_list_displayed = False
+'''
 # Create a button to show a list of users
 show_users_button = tk.Button(input_frame, text="Show Users",command=show_user)
 show_users_button.grid(row=2, column=2, padx=10, pady=10)
-"""Ovo treba urediti, znači želimo da kad se klikne po drugi put show users da nestane windows, trenutno nestane i windows i button
+'''
+user_window=None
 def toggle_user_list():
-    global user_list_displayed
+    global user_list_displayed, user_window
     if user_list_displayed:
-        # If the user list is currently displayed, hide it and update the flag
-        show_users_button.destroy()
+        # If the user list is currently displayed, close the window and update the flag
+        user_window.destroy()
         user_list_displayed = False
     else:
-        # If the user list is not displayed, show it and update the flag
+        # If the user list is not displayed, show it in a new window and update the flag
         show_user()
         user_list_displayed = True
 
-show_users_button = tk.Button(input_frame, text="Show Users", command=toggle_user_list)
+
+
+show_users_button = tk.Button(input_frame, text="Show Users", command=show_user)
 show_users_button.grid(row=2, column=2, padx=10, pady=10)
 
 
-"""
+
 # Initialize a flag variable to keep track of the user list state
-user_list_displayed = False
+
 
 
 

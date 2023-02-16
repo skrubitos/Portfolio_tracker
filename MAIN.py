@@ -1,11 +1,13 @@
 import datetime
+import sqlite3
+import requests
+import tkinter as tk
+from tkinter import messagebox
 
 current_time = datetime.datetime.now()
 current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 # Importing the sqlite3 module and connecting to the database:
-import sqlite3
-import requests
 
 conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
@@ -95,6 +97,7 @@ def new_user(nick, pasw):
     result = cur.fetchone()
     if result:
         print(f'Error: username "{nick}" is already taken.')
+        messagebox.showwarning(f'Error: username "{nick}" is already taken.')
         # Return False indicating that the user could not be created due to duplicate username
         return False
     else:
@@ -112,17 +115,27 @@ def new_user(nick, pasw):
         cur.execute('INSERT INTO User (name, password, salt,timestamp) VALUES (?, ?, ?,?)', (nick, hashed_password, salt,current_time_string))
         conn.commit()
         print(f'Success: username "{nick}" has been created.')
+        messagebox.showinfo("Registration Successful", "User registered successfully!")
         return True
 
+
+
+
 def show_user():
-    cur.execute("SELECT name, timestamp FROM user")
-    result= cur.fetchall()
-    if len(result)<1:
-        print("No users yet")
     
-    for j in range(len(result)):
-        print(f"User {j+1}: {result[j][0]} (Registered: {result[j][1]}) ")
-        
+    
+    cur.execute("SELECT name, timestamp FROM user")
+    result = cur.fetchall()
+    if len(result) < 1:
+        messagebox.showinfo("User List", "No users yet")
+    else:
+        user_data = ""
+        for j in range(len(result)):
+            user_data += f"User {j+1}: {result[j][0]} (Registered: {result[j][1]})\n"
+        user_window = tk.Toplevel(root)
+        user_window.title("User List")
+        user_label = tk.Label(user_window, text=user_data, justify="left")
+        user_label.pack(padx=10, pady=10)
 
 
 def add_token(symbol, amount=0):
@@ -188,3 +201,59 @@ def get_price(symbol):
         return False
     
 
+
+# Create a new Tkinter window
+root = tk.Tk()
+root.geometry("500x700")
+root.title("User Login System")
+
+# Create a frame for the input fields and buttons
+input_frame = tk.Frame(root)
+input_frame.pack(pady=200)
+
+# Create a label for the username field
+username_label = tk.Label(input_frame, text="Username:")
+username_label.grid(row=0, column=0, padx=10, pady=10)
+
+# Create an entry field for the username
+username_entry = tk.Entry(input_frame)
+username_entry.grid(row=0, column=1, padx=10, pady=10)
+
+# Create a label for the password field
+password_label = tk.Label(input_frame, text="Password:")
+password_label.grid(row=1, column=0, padx=10, pady=10)
+
+# Create an entry field for the password
+password_entry = tk.Entry(input_frame, show="*")
+password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+# Create a button to submit the login information
+login_button = tk.Button(input_frame, text="Login")
+login_button.grid(row=0, column=2, padx=10, pady=10)
+
+# Create a button to register the user
+register_button = tk.Button(input_frame, text="Register", command=new_user)
+register_button.grid(row=2, column=1, padx=10, pady=10)
+
+
+
+show_users_button = tk.Button(input_frame, text="Show Users", command=show_user)
+show_users_button.grid(row=2, column=2, padx=10, pady=10)
+
+
+
+# Initialize a flag variable to keep track of the user list state
+
+
+
+
+# Create a frame for the buttons
+button_frame = tk.Frame(root)
+button_frame.pack(side="right", padx=10, pady=10)
+
+# Create a label to display the user data
+user_data_label = tk.Label(button_frame, text="", justify="left", width=50, wraplength=400)
+user_data_label.pack(pady=2)
+
+# Start the Tkinter event loop
+root.mainloop()
