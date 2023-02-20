@@ -43,7 +43,6 @@ CREATE  TABLE IF NOT EXISTS  past_value (
 
 ''')
 
-
 # DEFINING LOGIN FUNCTION
 # (The login function takes two arguments: nick and pasw. 
 # It uses the execute method of the cursor cur to query the User table for a user # with the given username and password.
@@ -73,8 +72,6 @@ def login(nick, pasw):
     # Return False indicating that the login was not successful
     return False
 
-
-
 # DEFINING DELITE USER 
 # The delete_user function takes two arguments: nick and pasw.
 #  It first calls the login function to check if the user with the given username and password exists. 
@@ -94,7 +91,6 @@ def delete_user(nick, pasw):
     else:
         print('Error: invalid password. User deletion failed.')
         return False
-
 
 def new_user(nick, pasw):
     # Check if the given username already exists in the User table
@@ -135,11 +131,7 @@ def new_user(nick, pasw):
         messagebox.showinfo("Registration Successful", "User registered successfully!")
         return True
 
-
-
-def show_user():
-    
-    
+def show_user():    
     cur.execute("SELECT name, timestamp FROM user")
     result = cur.fetchall()
     if len(result) < 1:
@@ -152,7 +144,6 @@ def show_user():
         user_window.title("User List")
         user_label = tk.Label(user_window, text=user_data, justify="left")
         user_label.pack(padx=10, pady=10)
-
 
 def add_token(symbol, amount=0):
     try:
@@ -172,7 +163,6 @@ def add_token(symbol, amount=0):
             print(f'Success: token "{symbol}" has been added to the portfolio.')
     except SyntaxError:
         print("Something went wrong. Make sure that you use integer or float number ex. (1.2)")
-
 
 #if user id is in variable logged_in_user_id then it will show list of tokens
 def show_tokens():
@@ -200,8 +190,6 @@ def show_tokens():
     else:
         print('You have no tokens in your portfolio.')
 
-
-
 def get_price(symbol):
     url = f"https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}&convert=USD"
     headers = {
@@ -216,11 +204,7 @@ def get_price(symbol):
     except KeyError:
         return False
     
-import tkinter as tk
-
-
-
-
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Create a new Tkinter window
 root = tk.Tk()
 root.geometry("500x700")
