@@ -3,6 +3,8 @@ import sqlite3
 import requests
 import tkinter as tk
 from tkinter import messagebox
+import bcrypt
+
 
 current_time = datetime.datetime.now()
 current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -12,7 +14,7 @@ current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
 conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
 logged_in_user_id= None
-logged_in_user_api=
+
 
 # Create the User table
 cur.executescript('''
@@ -93,7 +95,6 @@ def delete_user(nick, pasw):
         print('Error: invalid password. User deletion failed.')
         return False
 
-import bcrypt
 
 def new_user(nick, pasw):
     # Check if the given username already exists in the User table
@@ -224,8 +225,8 @@ import tkinter as tk
 root = tk.Tk()
 root.geometry("500x700")
 root.title("User Login System")
-icon = tk.PhotoImage(file="main_icon.png")
-root.iconphoto(False, icon)
+#icon = tk.PhotoImage(file="main_icon.png")
+#root.iconphoto(False, icon)
 
 # Create a frame for the input fields and buttons
 input_frame = tk.Frame(root)
