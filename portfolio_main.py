@@ -294,4 +294,4 @@ root.mainloop()
 
 
 login("skrubitos","admin")
-add_token("BTC",-0.1)
+add_token("BTC",2)

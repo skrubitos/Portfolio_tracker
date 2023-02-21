@@ -5,7 +5,7 @@ import matplotlib.backends.backend_tkagg as tkagg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas_datareader as web
 import datetime as dt
-
+import requests
 # Connect to the database
 conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
@@ -17,6 +17,7 @@ SELECT * FROM past_portfolio_worth WHERE user_id=?
 """, (logged_in_user_id,))
 results = cur.fetchall()
 
+
 # Create two lists for the X and Y axes
 amount = []
 date = []
@@ -25,17 +26,46 @@ for result in results:
     amount.append(zaokruzen)
     date.append(result[2])
 
+
+def get_price(symbol):
+    url = f"https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}&convert=USD"
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_Pro_API_Key': '9bb7d0ec-030e-42f0-804f-8778b7507e0b'
+    }
+
+    response = requests.get(url, headers=headers).json()
+    try:
+        price = response['data'][symbol]['quote']['USD']['price']
+        if len(response['data']) < 1:
+            pass
+        else:
+            return price
+    except KeyError:
+        return None
+    
 # Create the line chart
 fig1 = plt.figure(figsize=(6, 4), dpi=100)
 plt.plot(date, amount)
 plt.xlabel("Days")
 plt.ylabel("Amount of $")
 
-tickers=["BTC","ETH","LTC","DOGE"]
-amount=[0.5,10,40,30000]
-prices=[24000,1500,98,0.08]
+tickers=[]
+amount=[]
+prices=[]
 total=[]
-
+cur.execute("""
+SELECT * FROM Token WHERE user_id=?
+""", (logged_in_user_id,))
+results = cur.fetchall()
+print(f'results{results[0][2]}')
+for index,result in enumerate(results):
+    print(f'result{result[2]}')
+    tickers.append(result[2].strip('\''))
+    amount.append(result[3])
+    prices.append(get_price(tickers[index]))
+print(prices)
+print(tickers)
 for x in range(len(tickers)):
     total.append(amount[x]*prices[x])
 
@@ -45,14 +75,15 @@ ax.figure.set_facecolor('white')
 ax.tick_params(axis="x", color="black")
 ax.tick_params(axis="y", color="black")
 ax.set_title("",color="red",fontsize=20)
-_,texts,_= ax.pie(total,labels=tickers, autopct='%1.1f%%',pctdistance=0.8)
+
+_, texts, _ = ax.pie(total, labels=tickers, autopct='%1.1f%%', pctdistance=0.8)
 [text.set_color('black')for text in texts]
 krug=plt.Circle((0,0),0.55,color="white")
 plt.gca().add_artist(krug)
 
 # Create the Tkinter GUI
 root = tk.Tk()
-
+root.configure(bg="white")
 root.title("Crypto Portfolio Chart")
 
 # Add the line chart to the GUI
