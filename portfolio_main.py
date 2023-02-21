@@ -4,13 +4,12 @@ import requests
 import tkinter as tk
 from tkinter import messagebox
 import bcrypt
-
+import matplotlib.pyplot as web
 
 current_time = datetime.datetime.now()
 current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 # Importing the sqlite3 module and connecting to the database:
-
 conn = sqlite3.connect('crypto.sqlite')
 cur = conn.cursor()
 logged_in_user_id= None
@@ -176,12 +175,12 @@ def show_tokens():
         total_worth= 0
         print('\t Here are your tokens')
         for token in tokens:
-            price=get_price(token[0])
-            price = round(price, 2)
-            holdingsS= price* float(token[1])
+            price_of_token=get_price(token[0])
+            price_of_token = round(price_of_token, 2)            
+            holdingsS= price_of_token* float(token[1])
             total_worth+= float(holdingsS)
-            print(f'{token[0]}: {token[1]} \t Price in $: {get_price(token[0]):,.2f}$')
-            cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,token[1], token[0],  price ,holdingsS, current_time_string))
+            print(f'{token[0]}: {token[1]} \t  {holdingsS:,.2f}$')
+            cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,token[1], token[0],  price_of_token ,holdingsS, current_time_string))
 
             conn.commit()
 
@@ -203,8 +202,8 @@ def get_price(symbol):
         return price
     except KeyError:
         return False
-    
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+#GUI
 # Create a new Tkinter window
 root = tk.Tk()
 root.geometry("500x700")
@@ -254,3 +253,6 @@ user_data_label.pack(pady=2)
 
 # Start the Tkinter event loop
 root.mainloop()
+
+'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+#VIZUALIZACIJA
