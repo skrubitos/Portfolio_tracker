@@ -73,7 +73,6 @@ def login(nick, pasw):
             print(f'Success: "{nick}" has been logged in.')
             # Return True indicating that the login was successful
             messagebox.showinfo(title="Succesfull Login", message=f"Welcome {nick}")
-            show_tokens()
 
             return True
     print('Name or password wrong')
@@ -163,6 +162,7 @@ def add_token(symbol, amount=0):
         result = cur.fetchone()
         if get_price(symbol)== None:
             print("This token does not exist")
+            show_tokens()
             result=False
             return False
 
@@ -171,12 +171,14 @@ def add_token(symbol, amount=0):
             cur.execute('UPDATE Token SET amount = ? WHERE user_id = ? AND symbol = ?', (new_amount, logged_in_user_id, symbol))
             conn.commit()
             print(f'Success: token "{symbol}" has been updated in the portfolio. Total amount is {new_amount}.')
+            show_tokens()
+
         
         else:
             cur.execute('INSERT INTO Token (user_id, symbol, amount) VALUES (?, ?,?)', (logged_in_user_id, symbol, amount))
             conn.commit()
             print(f'Success: token "{symbol}" has been added to the portfolio.')
-         
+            show_tokens()
         price_of_token=get_price(symbol)
         price_of_token = round(price_of_token, 2)            
         holdingsS= price_of_token* float(amount)
@@ -209,12 +211,12 @@ def show_tokens():
 
             conn.commit()
 
+      
+        print(f"Your portfolio is worth: {total_worth:,.2f}$")
         cur.execute('INSERT INTO past_portfolio_worth(user_id, total_worth,date) VALUES (?,?,?)', (logged_in_user_id,total_worth ,current_time_string))
 
         conn.commit()
 
-   
-        print(f"Your portfolio is worth: {total_worth:,.2f}$")
     else:
         print('You have no tokens in your portfolio.')
 
@@ -291,11 +293,5 @@ root.mainloop()
 'import matplotlib.pyplot as web'
 
 
-
-new_user("skrubitos","admin")
 login("skrubitos","admin")
-add_token("LTdddC",2)
-add_token("DOT",10)
-add_token("ETH",4)
-add_token("BTC",10)
-show_tokens()
+add_token("BTC",-0.1)
