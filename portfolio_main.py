@@ -7,7 +7,7 @@ import bcrypt
 import matplotlib.pyplot as web
 
 current_time = datetime.datetime.now()
-current_time_string = current_time.strftime("%Y-%m-%d %H:%M:%S")
+current_time_string = current_time.strftime("%Y-%m-%d %H:%M")
 
 # Importing the sqlite3 module and connecting to the database:
 conn = sqlite3.connect('crypto.sqlite')
@@ -151,15 +151,30 @@ def add_token(symbol, amount=0):
             return 
         cur.execute('SELECT amount FROM Token WHERE user_id = ? AND symbol = ?', (logged_in_user_id, symbol))
         result = cur.fetchone()
+        if get_price(symbol)== None:
+            print("This token does not exist")
+            result=False
+            return False
+
         if result:
             new_amount = result[0] + float (amount)
             cur.execute('UPDATE Token SET amount = ? WHERE user_id = ? AND symbol = ?', (new_amount, logged_in_user_id, symbol))
             conn.commit()
             print(f'Success: token "{symbol}" has been updated in the portfolio. Total amount is {new_amount}.')
+        
         else:
             cur.execute('INSERT INTO Token (user_id, symbol, amount) VALUES (?, ?,?)', (logged_in_user_id, symbol, amount))
             conn.commit()
             print(f'Success: token "{symbol}" has been added to the portfolio.')
+         
+        price_of_token=get_price(symbol)
+        price_of_token = round(price_of_token, 2)            
+        holdingsS= price_of_token* float(amount)
+        total_worth =price_of_token*holdingsS 
+        
+        cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,symbol,price_of_token, amount,   total_worth, current_time_string))
+
+        conn.commit()
     except SyntaxError:
         print("Something went wrong. Make sure that you use integer or float number ex. (1.2)")
 
@@ -180,7 +195,7 @@ def show_tokens():
             holdingsS= price_of_token* float(token[1])
             total_worth+= float(holdingsS)
             print(f'{token[0]}: {token[1]} \t  {holdingsS:,.2f}$')
-            cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,token[1], token[0],  price_of_token ,holdingsS, current_time_string))
+            cur.execute('INSERT INTO past_value (user_id, token,price, amount,holdings$, date) VALUES (?,?,?,?,?,?)', (logged_in_user_id,token[0],price_of_token, token[1],   holdingsS, current_time_string))
 
             conn.commit()
 
@@ -199,9 +214,12 @@ def get_price(symbol):
     response = requests.get(url, headers=headers).json()
     try:
         price = response['data'][symbol]['quote']['USD']['price']
-        return price
+        if len(response['data']) < 1:
+            pass
+        else:
+            return price
     except KeyError:
-        return False
+        return None
 '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 #GUI
 # Create a new Tkinter window
@@ -256,3 +274,10 @@ root.mainloop()
 
 '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 #VIZUALIZACIJA
+'import matplotlib.pyplot as web'
+
+login("skrubitos","admin")
+add_token("LTdddC",2)
+add_token("DOT",10)
+add_token("BTC",10)
+show_tokens()
