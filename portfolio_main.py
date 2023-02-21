@@ -38,6 +38,15 @@ CREATE  TABLE IF NOT EXISTS  past_value (
     holdings$ REAL NOT NULL,
     date DATETIME,
     FOREIGN KEY (user_id) REFERENCES User (id)
+
+);
+CREATE TABLE IF NOT EXISTS past_portfolio_worth (
+    user_id INTEGER NOT NULL,
+    total_worth REAL NOT NULL,
+    date DATETIME,
+    FOREIGN KEY (user_id) REFERENCES User (id)
+
+
 )
 
 ''')
@@ -64,6 +73,7 @@ def login(nick, pasw):
             print(f'Success: "{nick}" has been logged in.')
             # Return True indicating that the login was successful
             messagebox.showinfo(title="Succesfull Login", message=f"Welcome {nick}")
+            show_tokens()
 
             return True
     print('Name or password wrong')
@@ -199,7 +209,11 @@ def show_tokens():
 
             conn.commit()
 
-           
+        cur.execute('INSERT INTO past_portfolio_worth(user_id, total_worth,date) VALUES (?,?,?)', (logged_in_user_id,total_worth ,current_time_string))
+
+        conn.commit()
+
+   
         print(f"Your portfolio is worth: {total_worth:,.2f}$")
     else:
         print('You have no tokens in your portfolio.')
@@ -276,8 +290,12 @@ root.mainloop()
 #VIZUALIZACIJA
 'import matplotlib.pyplot as web'
 
+
+
+new_user("skrubitos","admin")
 login("skrubitos","admin")
 add_token("LTdddC",2)
 add_token("DOT",10)
+add_token("ETH",4)
 add_token("BTC",10)
 show_tokens()
