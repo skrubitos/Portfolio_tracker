@@ -4,7 +4,12 @@ import requests
 import tkinter as tk
 from tkinter import messagebox
 import bcrypt
-import matplotlib.pyplot as web
+import matplotlib.pyplot as plt
+import matplotlib.backends.backend_tkagg as tkagg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pandas_datareader as web
+import datetime as dt
+import requests
 
 current_time = datetime.datetime.now()
 current_time_string = current_time.strftime("%Y-%m-%d %H:%M")
@@ -58,6 +63,94 @@ CREATE TABLE IF NOT EXISTS past_portfolio_worth (
 #  and we set the logged_in_user_id to the user's ID, which is stored in the first column (index 0) of the result. 
 # Finally, the function returns True if the user was found, and False otherwise.)
 
+def graf():
+    # Retrieve data from the database
+    cur.execute("""
+    SELECT * FROM past_portfolio_worth WHERE user_id=?
+    """, (logged_in_user_id,))
+    results = cur.fetchall()
+
+
+    # Create two lists for the X and Y axes
+    amount = []
+    date = []
+    for result in results:
+        zaokruzen = round(result[1], 2)
+        amount.append(zaokruzen)
+        date.append(result[2])
+
+        
+    import matplotlib.dates as mdates
+
+    # Create the line chart
+    fig1 = plt.figure(figsize=(6, 4), dpi=100)
+    plt.plot(date, amount)
+    plt.xlabel("Days")
+    plt.ylabel("Amount of $")
+
+    # Format x-axis ticks as days only
+    days = mdates.DayLocator(interval=1)
+    days_fmt = mdates.DateFormatter('%d')
+    plt.gca().xaxis.set_major_locator(days)
+    plt.gca().xaxis.set_major_formatter(days_fmt)
+
+    # Rest of the code
+    tickers=[]
+    amount=[]
+    prices=[]
+    total=[]
+    cur.execute("""
+    SELECT * FROM Token WHERE user_id=?
+    """, (logged_in_user_id,))
+    results = cur.fetchall()
+    print(f'results{results[0][2]}')
+    for index,result in enumerate(results):
+        print(f'result{result[2]}')
+        tickers.append(result[2].strip('\''))
+        amount.append(result[3])
+        prices.append(get_price(tickers[index]))
+    print(prices)
+    print(tickers)
+    for x in range(len(tickers)):
+        total.append(amount[x]*prices[x])
+
+    fig2, ax= plt.subplots(figsize=(4,4))
+    ax.set_facecolor('white')
+    ax.figure.set_facecolor('white')
+    ax.tick_params(axis="x", color="black")
+    ax.tick_params(axis="y", color="black")
+    ax.set_title("",color="red",fontsize=20)
+
+    _, texts, _ = ax.pie(total, labels=tickers, autopct='%1.1f%%', pctdistance=0.8)
+    [text.set_color('black')for text in texts]
+    krug=plt.Circle((0,0),0.55,color="white")
+    plt.gca().add_artist(krug)
+
+    # Create the Tkinter GUI
+    graf = tk.Tk()
+    graf.geometry("1280x720")
+    graf.configure(bg="white")
+    graf.title("Crypto Portfolio Chart")
+
+    # Add the line chart to the GUI
+    canvas1 = FigureCanvasTkAgg(fig1, master=graf)
+    canvas1.draw()
+    canvas1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    # Add the pie chart to the GUI
+    canvas2 = tk.Canvas(graf)
+    canvas2.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+    fig_agg = tkagg.FigureCanvasTkAgg(fig2, master=canvas2)
+    fig_agg.draw()
+    fig_agg.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    # Run the GUI
+    tk.mainloop()
+
+
+import threading
+
+
 def login(nick, pasw):
     global logged_in_user_id
     cur.execute('SELECT * FROM User WHERE name = ?', (nick,))
@@ -72,7 +165,10 @@ def login(nick, pasw):
             logged_in_user_id = result[0]
             print(f'Success: "{nick}" has been logged in.')
             # Return True indicating that the login was successful
-            messagebox.showinfo(title="Succesfull Login", message=f"Welcome {nick}")
+            root.destroy()
+            graf()
+
+            
 
             return True
     print('Name or password wrong')
@@ -242,8 +338,20 @@ def get_price(symbol):
 root = tk.Tk()
 root.geometry("500x700")
 root.title("User Login System")
+root.configure(background="white")
 #icon = tk.PhotoImage(file="main_icon.png")
 #root.iconphoto(False, icon)
+
+boja=0
+#ovo dodat widget za dark mode
+def darkmod():
+    global boja
+    if boja%2==0:
+        root.configure(background="black")
+        boja+=1
+    else:
+        root.configure(background="white")
+        boja+=1
 
 # Create a frame for the input fields and buttons
 input_frame = tk.Frame(root)
@@ -264,6 +372,12 @@ password_label.grid(row=1, column=0, padx=10, pady=10)
 # Create an entry field for the password
 password_entry = tk.Entry(input_frame, show="*")
 password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+
+# Create a button to change to dark mode
+dark_mode = tk.Button(input_frame, text="Dark Mode", command=lambda: darkmod())
+dark_mode.grid(row=2, column=0, padx=0, pady=0)
+
 
 # Create a button to submit the login information
 login_button = tk.Button(input_frame, text="Login", command=lambda: login(username_entry.get(), password_entry.get()))
@@ -291,7 +405,3 @@ root.mainloop()
 '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 #VIZUALIZACIJA
 'import matplotlib.pyplot as web'
-
-
-login("skrubitos","admin")
-add_token("BTC",2)

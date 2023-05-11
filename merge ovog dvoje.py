@@ -44,12 +44,21 @@ def get_price(symbol):
     except KeyError:
         return None
     
+import matplotlib.dates as mdates
+
 # Create the line chart
 fig1 = plt.figure(figsize=(6, 4), dpi=100)
 plt.plot(date, amount)
 plt.xlabel("Days")
 plt.ylabel("Amount of $")
 
+# Format x-axis ticks as days only
+days = mdates.DayLocator(interval=1)
+days_fmt = mdates.DateFormatter('%d')
+plt.gca().xaxis.set_major_locator(days)
+plt.gca().xaxis.set_major_formatter(days_fmt)
+
+# Rest of the code
 tickers=[]
 amount=[]
 prices=[]
@@ -82,17 +91,18 @@ krug=plt.Circle((0,0),0.55,color="white")
 plt.gca().add_artist(krug)
 
 # Create the Tkinter GUI
-root = tk.Tk()
-root.configure(bg="white")
-root.title("Crypto Portfolio Chart")
+graf = tk.Tk()
+graf.geometry("1280x720")
+graf.configure(bg="white")
+graf.title("Crypto Portfolio Chart")
 
 # Add the line chart to the GUI
-canvas1 = FigureCanvasTkAgg(fig1, master=root)
+canvas1 = FigureCanvasTkAgg(fig1, master=graf)
 canvas1.draw()
 canvas1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 # Add the pie chart to the GUI
-canvas2 = tk.Canvas(root)
+canvas2 = tk.Canvas(graf)
 canvas2.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 fig_agg = tkagg.FigureCanvasTkAgg(fig2, master=canvas2)
 fig_agg.draw()
